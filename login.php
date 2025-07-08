@@ -6,7 +6,7 @@ header('Access-Control-Allow-Headers: Content-Type');
 
 // Database configuration
 $host = 'localhost';
-$dbname = 'database';
+$dbname = 'final';
 $username = 'root';
 $password = 'smit0987';
 
@@ -14,12 +14,18 @@ try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 } catch(PDOException $e) {
-    echo json_encode(['success' => false, 'error' => 'Database connection failed']);
+    echo json_encode(['success' => false, 'error' => 'Database connection failed: ' . $e->getMessage()]);
     exit;
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $input = json_decode(file_get_contents('php://input'), true);
+    
+    if (!$input) {
+        echo json_encode(['success' => false, 'error' => 'Invalid JSON data']);
+        exit;
+    }
+    
     $username = $input['username'] ?? '';
     $password = $input['password'] ?? '';
     
@@ -29,6 +35,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     
     try {
+        // For demo purposes, we'll use plain text password comparison
+        // In production, use password_hash() and password_verify()
         $stmt = $pdo->prepare("SELECT id, name, email, username FROM trainers WHERE username = ? AND password = ?");
         $stmt->execute([$username, $password]);
         $trainer = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -41,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             echo json_encode(['success' => false, 'error' => 'Invalid username or password']);
         }
     } catch(PDOException $e) {
-        echo json_encode(['success' => false, 'error' => 'Login failed']);
+        echo json_encode(['success' => false, 'error' => 'Login failed: ' . $e->getMessage()]);
     }
 } else {
     echo json_encode(['success' => false, 'error' => 'Method not allowed']);
