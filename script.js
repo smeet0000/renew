@@ -43,6 +43,17 @@ class TrainerDashboard {
         this.closeCreateModal()
       }
     })
+
+    // Upcoming sessions modal
+    document.getElementById("upcomingSessionsBtn").addEventListener("click", () => this.openUpcomingModal())
+    document.getElementById("closeUpcomingModal").addEventListener("click", () => this.closeUpcomingModal())
+
+    // Close modal on outside click
+    document.getElementById("upcomingSessionsModal").addEventListener("click", (e) => {
+      if (e.target.id === "upcomingSessionsModal") {
+        this.closeUpcomingModal()
+      }
+    })
   }
 
   async handleLogin(e) {
@@ -54,6 +65,7 @@ class TrainerDashboard {
     const btnText = document.getElementById("loginBtnText")
     const spinner = document.getElementById("loginSpinner")
 
+    // Reset UI
     btnText.style.display = "none"
     spinner.style.display = "block"
     errorDiv.style.display = "none"
@@ -67,22 +79,28 @@ class TrainerDashboard {
         body: JSON.stringify({ username, password }),
       })
 
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
       const data = await response.json()
 
-      if (data.success) {
+      if (data.success && data.trainer) {
         this.currentTrainer = data.trainer
         localStorage.setItem("trainer", JSON.stringify(data.trainer))
         this.showDashboard()
         await this.loadSessions()
       } else {
-        errorDiv.textContent = data.error || "Login failed"
+        errorDiv.textContent = data.error || "Login failed. Please try again."
         errorDiv.style.display = "block"
       }
     } catch (error) {
-      errorDiv.textContent = "Connection error. Please try again."
+      console.error("Login error:", error)
+      errorDiv.textContent = "Connection error. Please check if the server is running and try again."
       errorDiv.style.display = "block"
     }
 
+    // Reset button state
     btnText.style.display = "block"
     spinner.style.display = "none"
   }
@@ -207,18 +225,23 @@ class TrainerDashboard {
           "-" +
           String(current.getDate()).padStart(2, "0")
 
-        // Filter sessions for this date (only future/ongoing sessions)
+        // Filter sessions for this date
         const daySessions = this.sessions.filter((session) => {
-          return session.session_date === dateStr && !this.isSessionCompleted(session)
+          return session.session_date === dateStr
         })
 
         html += `<div class="day-cell ${!isCurrentMonth ? "other-month" : ""} ${isToday ? "today" : ""}">`
         html += `<div class="day-number">${current.getDate()}</div>`
 
-        // Display sessions
+        // Display sessions with proper color coding
         daySessions.forEach((session) => {
-          const sessionStatus = this.getSessionStatus(session)
-          const statusClass = sessionStatus === "ongoing" ? "session-ongoing" : ""
+          let statusClass = "session-scheduled"
+
+          if (session.status === "started") {
+            statusClass = "session-started"
+          } else if (session.status === "completed") {
+            statusClass = "session-completed"
+          }
 
           html += `<div class="session-item ${statusClass}">
                     <span>${session.session_time} - ${session.title}</span>
@@ -257,22 +280,27 @@ class TrainerDashboard {
         String(date.getDate()).padStart(2, "0")
 
       const daySessions = this.sessions.filter((session) => {
-        return session.session_date === dateStr && !this.isSessionCompleted(session)
+        return session.session_date === dateStr
       })
 
       html += `<div class="day-column">
-              <strong>${weekdays[i]}</strong><br>
-              <small>${date.getDate()}</small>
-              <div style="margin-top: 8px;">`
+            <strong>${weekdays[i]}</strong><br>
+            <small>${date.getDate()}</small>
+            <div style="margin-top: 8px;">`
 
       daySessions.forEach((session) => {
-        const sessionStatus = this.getSessionStatus(session)
-        const statusClass = sessionStatus === "ongoing" ? "session-ongoing" : ""
+        let statusClass = "session-scheduled"
+
+        if (session.status === "started") {
+          statusClass = "session-started"
+        } else if (session.status === "completed") {
+          statusClass = "session-completed"
+        }
 
         html += `<div class="session-item ${statusClass}" style="margin-bottom: 4px;">
-                  <span>${session.session_time} - ${session.title}</span>
-                  <button class="delete-session" onclick="dashboard.deleteSession(${session.id})" title="Delete session">×</button>
-              </div>`
+                <span>${session.session_time} - ${session.title}</span>
+                <button class="delete-session" onclick="dashboard.deleteSession(${session.id})" title="Delete session">×</button>
+            </div>`
       })
 
       html += "</div></div>"
@@ -293,7 +321,7 @@ class TrainerDashboard {
 
     const daySessions = this.sessions
       .filter((session) => {
-        return session.session_date === dateStr && !this.isSessionCompleted(session)
+        return session.session_date === dateStr
       })
       .sort((a, b) => a.session_time.localeCompare(b.session_time))
 
@@ -304,24 +332,31 @@ class TrainerDashboard {
     } else {
       html += '<div class="day-sessions">'
       daySessions.forEach((session) => {
-        const sessionStatus = this.getSessionStatus(session)
-        const statusClass = sessionStatus === "ongoing" ? "session-card-ongoing" : ""
-        const statusText = sessionStatus === "ongoing" ? " (Ongoing)" : ""
+        let statusClass = "session-card-scheduled"
+        let statusText = ""
+
+        if (session.status === "started") {
+          statusClass = "session-card-started"
+          statusText = " (In Progress)"
+        } else if (session.status === "completed") {
+          statusClass = "session-card-completed"
+          statusText = " (Completed)"
+        }
 
         html += `<div class="session-card ${statusClass}">
-                  <div class="session-info">
-                      <h4>${session.title}${statusText}</h4>
-                      <div class="session-details">
-                          <div>🕒 ${session.session_time} (${session.duration} min)</div>
-                          <div>👤 ${session.client_name}</div>
-                          <div>📋 ${session.session_type}</div>
-                          ${session.description ? `<div>📝 ${session.description}</div>` : ""}
-                      </div>
-                  </div>
-                  <div class="session-actions">
-                      <button class="delete-btn" onclick="dashboard.deleteSession(${session.id})">Delete</button>
-                  </div>
-              </div>`
+                <div class="session-info">
+                    <h4>${session.title}${statusText}</h4>
+                    <div class="session-details">
+                        <div>🕒 ${session.session_time} (${session.duration} min)</div>
+                        <div>👤 ${session.client_name}</div>
+                        <div>📋 ${session.session_type}</div>
+                        ${session.description ? `<div>📝 ${session.description}</div>` : ""}
+                    </div>
+                </div>
+                <div class="session-actions">
+                    <button class="delete-btn" onclick="dashboard.deleteSession(${session.id})">Delete</button>
+                </div>
+            </div>`
       })
       html += "</div>"
     }
@@ -518,12 +553,13 @@ class TrainerDashboard {
     const startTime = formData.get("startTime")
     const endTime = formData.get("endTime")
 
-    // Calculate session duration based on time range
-    const [startHour, startMin] = startTime.split(":").map(Number)
-    const [endHour, endMin] = endTime.split(":").map(Number)
-    const duration = endHour * 60 + endMin - (startHour * 60 + startMin)
+    // Calculate duration in minutes
+    const start = new Date(`2000-01-01T${startTime}:00`)
+    const end = new Date(`2000-01-01T${endTime}:00`)
+    const duration = (end - start) / (1000 * 60)
 
     const current = new Date(startDate)
+
     while (current <= endDate) {
       if (selectedDays.includes(current.getDay())) {
         sessions.push({
@@ -531,7 +567,7 @@ class TrainerDashboard {
           client: formData.get("client"),
           date: current.toISOString().split("T")[0],
           time: startTime,
-          duration: duration > 0 ? duration : 60, // Default to 60 minutes if invalid
+          duration: duration,
           type: formData.get("type"),
           description: formData.get("description") || "",
         })
@@ -553,21 +589,217 @@ class TrainerDashboard {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ id: sessionId }),
+        body: JSON.stringify({
+          id: sessionId,
+        }),
       })
 
       const data = await response.json()
 
       if (data.success) {
         await this.loadSessions()
+        alert("Session deleted successfully!")
       } else {
         alert("Error deleting session: " + (data.error || "Unknown error"))
       }
     } catch (error) {
+      console.error("Error deleting session:", error)
       alert("Connection error. Please try again.")
     }
   }
-}
 
-// Initialize dashboard
-const dashboard = new TrainerDashboard()
+  openUpcomingModal() {
+    const modal = document.getElementById("upcomingSessionsModal")
+    const sessionsList = document.getElementById("upcomingSessionsList")
+
+    // Get today's date in YYYY-MM-DD format
+    const today = new Date().toISOString().split("T")[0]
+
+    // Filter sessions for today and future dates, exclude completed sessions
+    const upcomingSessions = this.sessions
+      .filter((session) => {
+        return session.session_date >= today && session.status !== "completed"
+      })
+      .sort((a, b) => {
+        // Sort by date first, then by time
+        if (a.session_date === b.session_date) {
+          return a.session_time.localeCompare(b.session_time)
+        }
+        return a.session_date.localeCompare(b.session_date)
+      })
+
+    let html = ""
+
+    if (upcomingSessions.length === 0) {
+      html = `
+        <div style="text-align: center; padding: 40px; color: #718096;">
+          <div style="font-size: 48px; margin-bottom: 16px;">📅</div>
+          <p>No upcoming sessions scheduled</p>
+        </div>
+      `
+    } else {
+      // Group sessions by date
+      const sessionsByDate = {}
+      upcomingSessions.forEach((session) => {
+        if (!sessionsByDate[session.session_date]) {
+          sessionsByDate[session.session_date] = []
+        }
+        sessionsByDate[session.session_date].push(session)
+      })
+
+      // Render sessions grouped by date
+      Object.keys(sessionsByDate).forEach((date) => {
+        const dateObj = new Date(date + "T00:00:00")
+        const isToday = date === today
+        const dayName = dateObj.toLocaleDateString("en-US", { weekday: "long" })
+        const formattedDate = dateObj.toLocaleDateString("en-US", {
+          month: "long",
+          day: "numeric",
+          year: "numeric",
+        })
+
+        html += `
+          <div class="date-group">
+            <h3 class="date-header ${isToday ? "today-header" : ""}">
+              ${isToday ? "🔥 Today - " : ""}${dayName}, ${formattedDate}
+              <span class="session-count">(${sessionsByDate[date].length} session${sessionsByDate[date].length !== 1 ? "s" : ""})</span>
+            </h3>
+        `
+
+        sessionsByDate[date].forEach((session) => {
+          const statusClass = this.getStatusClass(session.status)
+          const statusText = this.getStatusText(session.status)
+
+          html += `
+            <div class="upcoming-session-card ${statusClass}" style="margin-bottom: 12px;">
+              <div class="session-header">
+                <h4>${session.title}</h4>
+                <span class="status-badge status-${session.status || "scheduled"}">${statusText}</span>
+              </div>
+              <div class="session-details">
+                <div>🕒 ${session.session_time} (${session.duration} min)</div>
+                <div>👤 ${session.client_name}</div>
+                <div>📋 ${session.session_type}</div>
+                ${session.description ? `<div>📝 ${session.description}</div>` : ""}
+              </div>
+              <div class="session-actions">
+                ${this.getSessionActionButtons(session)}
+              </div>
+            </div>
+          `
+        })
+
+        html += "</div>"
+      })
+    }
+
+    sessionsList.innerHTML = html
+    modal.style.display = "flex"
+  }
+
+  // Add helper methods for upcoming sessions
+  getStatusClass(status) {
+    switch (status) {
+      case "started":
+        return "status-started"
+      case "completed":
+        return "status-completed"
+      default:
+        return ""
+    }
+  }
+
+  getStatusText(status) {
+    switch (status) {
+      case "started":
+        return "In Progress"
+      case "completed":
+        return "Completed"
+      default:
+        return "Scheduled"
+    }
+  }
+
+  getSessionActionButtons(session) {
+    if (session.status === "completed") {
+      return '<span class="completed-badge">Session Completed</span>'
+    } else if (session.status === "started") {
+      return `<button class="end-session-btn" onclick="dashboard.endSession(${session.id})">🔲 End Session</button>`
+    } else {
+      return `<button class="start-session-btn" onclick="dashboard.startSession(${session.id})">▶️ Start Session</button>`
+    }
+  }
+
+  // Add session status management methods
+  async startSession(sessionId) {
+    try {
+      const response = await fetch("api/sessions.php", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: sessionId,
+          status: "started",
+        }),
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        // Update local session status
+        const sessionIndex = this.sessions.findIndex((s) => s.id == sessionId)
+        if (sessionIndex !== -1) {
+          this.sessions[sessionIndex].status = "started"
+        }
+
+        // Refresh the upcoming modal and calendar
+        this.openUpcomingModal()
+        this.updateCalendarView()
+      } else {
+        alert("Error starting session: " + (data.error || "Unknown error"))
+      }
+    } catch (error) {
+      console.error("Error starting session:", error)
+      alert("Connection error. Please try again.")
+    }
+  }
+
+  async endSession(sessionId) {
+    try {
+      const response = await fetch("api/sessions.php", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: sessionId,
+          status: "completed",
+        }),
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        // Update local session status
+        const sessionIndex = this.sessions.findIndex((s) => s.id == sessionId)
+        if (sessionIndex !== -1) {
+          this.sessions[sessionIndex].status = "completed"
+        }
+
+        // Refresh the upcoming modal and calendar
+        this.openUpcomingModal()
+        this.updateCalendarView()
+      } else {
+        alert("Error ending session: " + (data.error || "Unknown error"))
+      }
+    } catch (error) {
+      console.error("Error ending session:", error)
+      alert("Connection error. Please try again.")
+    }
+  }
+
+  closeUpcomingModal() {
+    document.getElementById("upcomingSessionsModal").style.display = "none"
+  }
+}
