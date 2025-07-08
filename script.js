@@ -12,7 +12,7 @@ class TrainerDashboard {
     this.bindEvents()
     this.checkAuthStatus()
     // Check for completed sessions every minute
-    setInterval(() => this.checkAndRemoveCompletedSessions(), 60000)
+    setInterval(() => this.checkAndUpdateSessionStatus(), 60000)
   }
 
   bindEvents() {
@@ -235,13 +235,7 @@ class TrainerDashboard {
 
         // Display sessions with proper color coding
         daySessions.forEach((session) => {
-          let statusClass = "session-scheduled"
-
-          if (session.status === "started") {
-            statusClass = "session-started"
-          } else if (session.status === "completed") {
-            statusClass = "session-completed"
-          }
+          const statusClass = this.getSessionStatusClass(session)
 
           html += `<div class="session-item ${statusClass}">
                     <span>${session.session_time} - ${session.title}</span>
@@ -289,13 +283,7 @@ class TrainerDashboard {
             <div style="margin-top: 8px;">`
 
       daySessions.forEach((session) => {
-        let statusClass = "session-scheduled"
-
-        if (session.status === "started") {
-          statusClass = "session-started"
-        } else if (session.status === "completed") {
-          statusClass = "session-completed"
-        }
+        const statusClass = this.getSessionStatusClass(session)
 
         html += `<div class="session-item ${statusClass}" style="margin-bottom: 4px;">
                 <span>${session.session_time} - ${session.title}</span>
@@ -332,16 +320,8 @@ class TrainerDashboard {
     } else {
       html += '<div class="day-sessions">'
       daySessions.forEach((session) => {
-        let statusClass = "session-card-scheduled"
-        let statusText = ""
-
-        if (session.status === "started") {
-          statusClass = "session-card-started"
-          statusText = " (In Progress)"
-        } else if (session.status === "completed") {
-          statusClass = "session-card-completed"
-          statusText = " (Completed)"
-        }
+        const statusClass = this.getSessionCardStatusClass(session)
+        const statusText = this.getSessionStatusText(session)
 
         html += `<div class="session-card ${statusClass}">
                 <div class="session-info">
@@ -371,13 +351,61 @@ class TrainerDashboard {
     return start
   }
 
-  // Check if a session is completed (past its end time)
-  isSessionCompleted(session) {
+  // Check if a session is completed by time (past its end time)
+  isSessionTimeCompleted(session) {
     const now = new Date()
     const sessionDate = new Date(session.session_date + "T" + session.session_time)
     const sessionEndTime = new Date(sessionDate.getTime() + session.duration * 60000)
 
     return now > sessionEndTime
+  }
+
+  // Get session status class for calendar items
+  getSessionStatusClass(session) {
+    // If manually completed or started, use that status
+    if (session.status === "started") {
+      return "session-started"
+    } else if (session.status === "completed") {
+      return "session-completed"
+    }
+
+    // If time has passed and not manually started/completed, mark as time-completed (black)
+    if (this.isSessionTimeCompleted(session)) {
+      return "session-time-completed"
+    }
+
+    // Default scheduled status
+    return "session-scheduled"
+  }
+
+  // Get session status class for day view cards
+  getSessionCardStatusClass(session) {
+    if (session.status === "started") {
+      return "session-card-started"
+    } else if (session.status === "completed") {
+      return "session-card-completed"
+    }
+
+    if (this.isSessionTimeCompleted(session)) {
+      return "session-card-time-completed"
+    }
+
+    return "session-card-scheduled"
+  }
+
+  // Get session status text
+  getSessionStatusText(session) {
+    if (session.status === "started") {
+      return " (In Progress)"
+    } else if (session.status === "completed") {
+      return " (Completed)"
+    }
+
+    if (this.isSessionTimeCompleted(session)) {
+      return " (Time Completed)"
+    }
+
+    return ""
   }
 
   // Get session status (upcoming, ongoing, completed)
@@ -395,49 +423,29 @@ class TrainerDashboard {
     }
   }
 
-  // Check and remove completed sessions
-  async checkAndRemoveCompletedSessions() {
+  // Check and update session status
+  async checkAndUpdateSessionStatus() {
     if (!this.currentTrainer) return
 
-    const completedSessions = this.sessions.filter((session) => this.isSessionCompleted(session))
+    let hasUpdates = false
 
-    if (completedSessions.length > 0) {
-      console.log(`Found ${completedSessions.length} completed sessions to remove`)
-
-      for (const session of completedSessions) {
-        try {
-          await this.removeCompletedSession(session.id)
-        } catch (error) {
-          console.error("Error removing completed session:", error)
-        }
+    // Check for sessions that should be automatically marked as time-completed
+    for (const session of this.sessions) {
+      if (this.isSessionTimeCompleted(session) && session.status !== "completed" && session.status !== "started") {
+        // Don't auto-update if manually started or completed
+        hasUpdates = true
       }
-
-      // Reload sessions and update display
-      await this.loadSessions()
     }
-  }
 
-  // Remove completed session from database
-  async removeCompletedSession(sessionId) {
-    try {
-      const response = await fetch("api/sessions.php", {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          id: sessionId,
-          auto_remove: true, // Flag to indicate this is automatic removal
-        }),
-      })
+    if (hasUpdates) {
+      // Just refresh the display - we'll handle the visual state in the frontend
+      this.updateCalendarView()
 
-      const data = await response.json()
-
-      if (!data.success) {
-        console.error("Error auto-removing completed session:", data.error)
+      // If upcoming modal is open, refresh it
+      const modal = document.getElementById("upcomingSessionsModal")
+      if (modal.style.display === "flex") {
+        this.openUpcomingModal()
       }
-    } catch (error) {
-      console.error("Connection error while removing completed session:", error)
     }
   }
 
@@ -469,7 +477,7 @@ class TrainerDashboard {
       String(today.getDate()).padStart(2, "0")
 
     const upcomingSessions = this.sessions.filter((session) => {
-      return session.session_date >= todayStr && !this.isSessionCompleted(session)
+      return session.session_date >= todayStr && !this.isSessionTimeCompleted(session)
     }).length
 
     document.getElementById("totalSessions").textContent = totalSessions
@@ -615,10 +623,10 @@ class TrainerDashboard {
     // Get today's date in YYYY-MM-DD format
     const today = new Date().toISOString().split("T")[0]
 
-    // Filter sessions for today and future dates, exclude completed sessions
+    // Filter sessions for today and future dates, exclude time-completed sessions
     const upcomingSessions = this.sessions
       .filter((session) => {
-        return session.session_date >= today && session.status !== "completed"
+        return session.session_date >= today && !this.isSessionTimeCompleted(session)
       })
       .sort((a, b) => {
         // Sort by date first, then by time
@@ -721,6 +729,11 @@ class TrainerDashboard {
   }
 
   getSessionActionButtons(session) {
+    // Don't show start button if session time has already passed
+    if (this.isSessionTimeCompleted(session)) {
+      return '<span class="completed-badge">Time Completed</span>'
+    }
+
     if (session.status === "completed") {
       return '<span class="completed-badge">Session Completed</span>'
     } else if (session.status === "started") {
@@ -732,6 +745,13 @@ class TrainerDashboard {
 
   // Add session status management methods
   async startSession(sessionId) {
+    // Check if session time has already passed
+    const session = this.sessions.find((s) => s.id == sessionId)
+    if (session && this.isSessionTimeCompleted(session)) {
+      alert("Cannot start session - the scheduled time has already passed.")
+      return
+    }
+
     try {
       const response = await fetch("api/sessions.php", {
         method: "PUT",
