@@ -376,28 +376,6 @@ body {
   background: #5a67d8;
 }
 
-/* Ongoing session styling */
-.session-item.session-ongoing {
-  background: #f6ad55;
-  animation: pulse 2s infinite;
-}
-
-.session-item.session-ongoing:hover {
-  background: #ed8936;
-}
-
-@keyframes pulse {
-  0% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.7;
-  }
-  100% {
-    opacity: 1;
-  }
-}
-
 .delete-session {
   background: none;
   border: none;
@@ -415,6 +393,23 @@ body {
   color: #ff6b6b;
 }
 
+/* Session status colors */
+
+/* Scheduled (Default Blue) */
+.session-item.session-scheduled {
+  background: #667eea !important;
+  color: white;
+}
+
+.session-item.session-scheduled:hover {
+  background: #5a67d8 !important;
+}
+
+.session-card.session-card-scheduled {
+  border-left-color: #667eea;
+  background: white;
+}
+
 /* Started session styling (green) */
 .session-item.session-started {
   background: #48bb78 !important;
@@ -430,7 +425,7 @@ body {
   background: #f0fff4;
 }
 
-/* Completed session styling (red) */
+/* Manually completed session styling (red) */
 .session-item.session-completed {
   background: #f56565 !important;
   color: white;
@@ -445,19 +440,19 @@ body {
   background: #fff5f5;
 }
 
-/* Session status colors - Scheduled (Default Blue) */
-.session-item.session-scheduled {
-  background: #667eea;
+/* Time completed session styling (black) */
+.session-item.session-time-completed {
+  background: #2d3748 !important;
   color: white;
 }
 
-.session-item.session-scheduled:hover {
-  background: #5a67d8;
+.session-item.session-time-completed:hover {
+  background: #1a202c !important;
 }
 
-.session-card.session-card-scheduled {
-  border-left-color: #667eea;
-  background: white;
+.session-card.session-card-time-completed {
+  border-left-color: #2d3748;
+  background: #f7fafc;
 }
 
 .week-view,
@@ -502,13 +497,6 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-}
-
-/* Ongoing session card styling */
-.session-card.session-card-ongoing {
-  border-left-color: #f6ad55;
-  background: #fffbf0;
-  animation: pulse 2s infinite;
 }
 
 .session-info h4 {
