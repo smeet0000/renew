@@ -18,11 +18,11 @@
             <form id="loginForm" class="login-form">
                 <div class="form-group">
                     <label for="username">Username</label>
-                    <input type="text" id="username" name="username" required>
+                    <input type="text" id="username" name="username" placeholder="Enter your username" required>
                 </div>
                 <div class="form-group">
                     <label for="password">Password</label>
-                    <input type="password" id="password" name="password" required>
+                    <input type="password" id="password" name="password" placeholder="Enter your password" required>
                 </div>
                 <div id="loginError" class="error-message" style="display: none;"></div>
                 <button type="submit" class="login-btn">
@@ -49,6 +49,9 @@
             <div class="header-right">
                 <button id="createSessionBtn" class="create-btn">
                     ➕ Create Session
+                </button>
+                <button id="upcomingSessionsBtn" class="create-btn" style="background: #48bb78;">
+                    📅 Upcoming Sessions
                 </button>
                 <div class="user-info">
                     <span id="trainerName"></span>
@@ -196,6 +199,26 @@
         </div>
     </div>
 
+    <!-- Upcoming Sessions Modal -->
+    <div id="upcomingSessionsModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📅 Upcoming Sessions</h2>
+                <button id="closeUpcomingModal" class="close-btn">&times;</button>
+            </div>
+            <div id="upcomingSessionsList" class="upcoming-sessions-list">
+                <!-- Sessions will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize dashboard when page loads
+        let dashboard;
+        document.addEventListener('DOMContentLoaded', function() {
+            dashboard = new TrainerDashboard();
+        });
+    </script>
     <script src="script.js"></script>
 </body>
 </html>
