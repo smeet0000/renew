@@ -1,12 +1,12 @@
 <?php
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, DELETE');
+header('Access-Control-Allow-Methods: GET, POST, DELETE, PUT');
 header('Access-Control-Allow-Headers: Content-Type');
 
 // Database configuration
 $host = 'localhost';
-$dbname = 'database';
+$dbname = 'final';
 $username = 'root';
 $password = 'smit0987';
 
@@ -125,6 +125,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
         }
     } catch(PDOException $e) {
         echo json_encode(['success' => false, 'error' => 'Failed to delete session']);
+    }
+}
+
+// PUT - Update session status
+if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
+    $input = json_decode(file_get_contents('php://input'), true);
+    $session_id = $input['id'] ?? '';
+    $status = $input['status'] ?? '';
+    
+    if (empty($session_id) || empty($status)) {
+        echo json_encode(['success' => false, 'error' => 'Session ID and status are required']);
+        exit;
+    }
+    
+    // Validate status
+    $valid_statuses = ['scheduled', 'started', 'completed'];
+    if (!in_array($status, $valid_statuses)) {
+        echo json_encode(['success' => false, 'error' => 'Invalid status']);
+        exit;
+    }
+    
+    try {
+        $stmt = $pdo->prepare("UPDATE sessions SET status = ? WHERE id = ?");
+        $stmt->execute([$status, $session_id]);
+        
+        if ($stmt->rowCount() > 0) {
+            echo json_encode(['success' => true, 'message' => 'Session status updated successfully']);
+        } else {
+            echo json_encode(['success' => false, 'error' => 'Session not found']);
+        }
+    } catch(PDOException $e) {
+        echo json_encode(['success' => false, 'error' => 'Failed to update session status']);
     }
 }
 ?>
