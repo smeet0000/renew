@@ -415,6 +415,51 @@ body {
   color: #ff6b6b;
 }
 
+/* Started session styling (green) */
+.session-item.session-started {
+  background: #48bb78 !important;
+  color: white;
+}
+
+.session-item.session-started:hover {
+  background: #38a169 !important;
+}
+
+.session-card.session-card-started {
+  border-left-color: #48bb78;
+  background: #f0fff4;
+}
+
+/* Completed session styling (red) */
+.session-item.session-completed {
+  background: #f56565 !important;
+  color: white;
+}
+
+.session-item.session-completed:hover {
+  background: #e53e3e !important;
+}
+
+.session-card.session-card-completed {
+  border-left-color: #f56565;
+  background: #fff5f5;
+}
+
+/* Session status colors - Scheduled (Default Blue) */
+.session-item.session-scheduled {
+  background: #667eea;
+  color: white;
+}
+
+.session-item.session-scheduled:hover {
+  background: #5a67d8;
+}
+
+.session-card.session-card-scheduled {
+  border-left-color: #667eea;
+  background: white;
+}
+
 .week-view,
 .day-view {
   padding: 16px;
@@ -527,6 +572,9 @@ body {
 
 .modal-header h2 {
   font-size: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .close-btn {
@@ -583,7 +631,163 @@ body {
   background: #cbd5e0;
 }
 
-/* Responsive */
+/* Upcoming Sessions Modal Styles */
+.upcoming-sessions-list {
+  max-height: 70vh;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+.upcoming-session-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-left: 4px solid #667eea;
+  border-radius: 8px;
+  padding: 16px;
+  transition: all 0.2s ease;
+}
+
+.upcoming-session-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+.upcoming-session-card.status-started {
+  border-left-color: #48bb78;
+  background: #f0fff4;
+}
+
+.upcoming-session-card.status-completed {
+  border-left-color: #f56565;
+  background: #fff5f5;
+}
+
+.session-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.session-header h4 {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+  color: #2d3748;
+  flex: 1;
+  margin-right: 12px;
+}
+
+.status-badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.status-badge.status-scheduled {
+  background: #e6fffa;
+  color: #234e52;
+}
+
+.status-badge.status-started {
+  background: #c6f6d5;
+  color: #22543d;
+}
+
+.status-badge.status-completed {
+  background: #fed7d7;
+  color: #742a2a;
+}
+
+.session-details {
+  margin-bottom: 16px;
+  font-size: 14px;
+  color: #4a5568;
+  line-height: 1.5;
+}
+
+.session-details div {
+  margin-bottom: 4px;
+}
+
+.session-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.start-session-btn {
+  background: #48bb78;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.start-session-btn:hover {
+  background: #38a169;
+}
+
+.end-session-btn {
+  background: #f56565;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.end-session-btn:hover {
+  background: #e53e3e;
+}
+
+.completed-badge {
+  color: #742a2a;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 4px 8px;
+  background: #fed7d7;
+  border-radius: 4px;
+}
+
+/* Date group styling for upcoming sessions */
+.date-group {
+  margin-bottom: 24px;
+}
+
+.date-header {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  background: #f7fafc;
+  border-radius: 6px;
+  border-left: 4px solid #e2e8f0;
+}
+
+.date-header.today-header {
+  background: #ebf8ff;
+  border-left-color: #3182ce;
+  color: #2c5282;
+}
+
+.session-count {
+  font-size: 14px;
+  font-weight: normal;
+  color: #718096;
+}
+
+/* Responsive improvements */
 @media (max-width: 768px) {
   .main-content {
     flex-direction: column;
@@ -605,5 +809,23 @@ body {
   .calendar-header {
     flex-direction: column;
     gap: 16px;
+  }
+
+  .session-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .session-header h4 {
+    margin-right: 0;
+    margin-bottom: 8px;
+  }
+
+  .session-actions {
+    flex-wrap: wrap;
+  }
+
+  .date-header {
+    font-size: 14px;
   }
 }
