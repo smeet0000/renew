@@ -1,0 +1,235 @@
+/* Admin-specific styles */
+
+/* Trainer Search Styles */
+.trainer-search {
+  margin-bottom: 32px;
+}
+
+.search-container {
+  position: relative;
+}
+
+.search-input {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: border-color 0.3s;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.search-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  max-height: 300px;
+  overflow-y: auto;
+  display: none;
+}
+
+.search-result-item {
+  padding: 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #f7fafc;
+  transition: background-color 0.2s;
+}
+
+.search-result-item:hover {
+  background: #f7fafc;
+}
+
+.search-result-item:last-child {
+  border-bottom: none;
+}
+
+.search-result-item.no-results {
+  cursor: default;
+  color: #718096;
+  text-align: center;
+}
+
+.search-result-item.no-results:hover {
+  background: white;
+}
+
+.trainer-result {
+  display: flex;
+  flex-direction: column;
+}
+
+.trainer-name {
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 4px;
+}
+
+.trainer-details {
+  font-size: 12px;
+  color: #718096;
+}
+
+/* Selected Trainer Styles */
+.selected-trainer {
+  background: #f0fff4;
+  border: 1px solid #c6f6d5;
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.trainer-info h4 {
+  margin: 0 0 4px 0;
+  color: #22543d;
+  font-size: 16px;
+}
+
+.trainer-info p {
+  margin: 0 0 4px 0;
+  color: #2f855a;
+  font-size: 14px;
+}
+
+.trainer-info small {
+  color: #38a169;
+  font-size: 12px;
+}
+
+.clear-btn {
+  background: #fed7d7;
+  color: #c53030;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background-color 0.2s;
+}
+
+.clear-btn:hover {
+  background: #feb2b2;
+}
+
+/* No Trainer Selected State */
+.no-trainer-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 60vh;
+}
+
+.empty-state {
+  text-align: center;
+  color: #718096;
+}
+
+.empty-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.empty-state h3 {
+  font-size: 24px;
+  margin-bottom: 8px;
+  color: #4a5568;
+}
+
+.empty-state p {
+  font-size: 16px;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+/* Admin Header Styling */
+.header h1 {
+  color: #2d3748;
+}
+
+/* Admin Stats Styling */
+.stats .stat-card:nth-child(2) .stat-number {
+  color: #48bb78;
+}
+
+.stats .stat-card:nth-child(3) .stat-number {
+  color: #ed8936;
+}
+
+.stats .stat-card:nth-child(4) .stat-number {
+  color: #f56565;
+}
+
+/* Admin Session Items - Remove delete buttons */
+.session-item .delete-session {
+  display: none;
+}
+
+.session-card .session-actions {
+  display: none;
+}
+
+/* Admin Login Page Styling */
+#adminLoginPage .logo {
+  color: #2d3748;
+}
+
+#adminLoginPage .login-header h1 {
+  color: #2d3748;
+}
+
+/* Responsive Design for Admin */
+@media (max-width: 768px) {
+  .selected-trainer {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .clear-btn {
+    align-self: flex-start;
+  }
+
+  .search-results {
+    position: fixed;
+    top: auto;
+    left: 20px;
+    right: 20px;
+    bottom: 20px;
+    max-height: 50vh;
+  }
+}
+
+/* Admin Calendar Customizations */
+.admin-dashboard .session-item {
+  cursor: default;
+}
+
+.admin-dashboard .session-card {
+  cursor: default;
+}
+
+/* Admin-specific session item styling */
+.admin-dashboard .session-item:hover {
+  opacity: 0.9;
+}
+
+/* Hide action buttons in admin view */
+.admin-dashboard .session-actions {
+  display: none !important;
+}
+
+.admin-dashboard .delete-session {
+  display: none !important;
+}
